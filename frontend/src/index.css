@@ -1487,6 +1487,46 @@ html, body, #root {
   padding: 0;
   white-space: nowrap;
 }
+.step-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.step-audio-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.btn-step-audio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--bp-line);
+  background: var(--bp-cream);
+  color: var(--bp-ink-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-step-audio.playing {
+  background: var(--bp-ink);
+  border-color: var(--bp-ink);
+  color: #fff;
+}
+.btn-step-audio:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.step-audio-error {
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  color: var(--bp-red);
+}
 
 /* Hide old description (shown in header caption) */
 .main-root .step-description { display: none; }

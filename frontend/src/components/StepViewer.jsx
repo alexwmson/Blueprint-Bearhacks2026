@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import LDrawViewer from './LDrawViewer.jsx';
+import { textToSpeech } from '../api/client.js';
 
 const CAMERA_MAP = {
   front: 'front',
@@ -25,6 +26,14 @@ const ChevronRight = () => (
     <path d="M4.5 2.5L9 6.5l-4.5 4" />
   </svg>
 );
+const MicIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 1 0 6 0V4a3 3 0 0 0-3-3z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+    <line x1="12" y1="19" x2="12" y2="23" />
+    <line x1="8" y1="23" x2="16" y2="23" />
+  </svg>
+);
 
 /**
  * StepViewer — displays step-by-step build instructions.
@@ -34,6 +43,11 @@ const ChevronRight = () => (
  */
 export default function StepViewer({ instructions }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isReading, setIsReading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [readError, setReadError] = useState('');
+  const audioRef = useRef(null);
+  const audioUrlRef = useRef(null);
 
   if (!instructions || !instructions.steps || instructions.steps.length === 0) {
     return <div className="step-viewer-empty">No steps available.</div>;
@@ -60,6 +74,73 @@ export default function StepViewer({ instructions }) {
   const viewLabel = CAMERA_LABEL[cameraHint] || 'Front view';
   const hasNewPieces = newPieces.length > 0;
 
+  const stopAudioPlayback = useRef(() => {});
+  stopAudioPlayback.current = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current = null;
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+    setIsPlaying(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopAudioPlayback.current();
+    };
+  }, []);
+
+  useEffect(() => {
+    stopAudioPlayback.current();
+    setIsReading(false);
+    setReadError('');
+  }, [currentStep]);
+
+  const handleReadStep = async () => {
+    if (isPlaying || isReading) {
+      stopAudioPlayback.current();
+      setIsReading(false);
+      return;
+    }
+
+    const spokenText = [step.description, step.sub_description]
+      .filter((part) => typeof part === 'string' && part.trim().length > 0)
+      .join(' ');
+
+    if (!spokenText) return;
+
+    try {
+      setReadError('');
+      setIsReading(true);
+
+      const audioUrl = await textToSpeech(spokenText);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audioUrlRef.current = audioUrl;
+
+      audio.onended = () => {
+        stopAudioPlayback.current();
+      };
+      audio.onerror = () => {
+        stopAudioPlayback.current();
+        setReadError('Could not play step audio.');
+      };
+
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      setReadError(err.message || 'Could not read this step right now.');
+    } finally {
+      setIsReading(false);
+    }
+  };
+
   /* How many future steps to preview (collapsed) */
   const PREVIEW_FUTURE = 1;
   const futureStart = currentStep + 1;
@@ -85,7 +166,22 @@ export default function StepViewer({ instructions }) {
               <div className="step-caption-bp">{step.sub_description || ''}</div>
             </div>
           </div>
-          <span className="step-progress">Step {currentStep + 1} / {totalSteps}</span>
+          <div className="step-progress-wrap">
+            <span className="step-progress">Step {currentStep + 1} / {totalSteps}</span>
+            <div className="step-audio-controls">
+              <button
+                type="button"
+                className={`btn-step-audio ${isPlaying ? 'playing' : ''}`}
+                onClick={handleReadStep}
+                disabled={isReading}
+                aria-label={isPlaying ? 'Stop reading step aloud' : 'Read step aloud'}
+              >
+                <MicIcon />
+                {isReading ? 'Loading...' : isPlaying ? 'Stop' : 'Read aloud'}
+              </button>
+              {readError && <span className="step-audio-error">{readError}</span>}
+            </div>
+          </div>
         </div>
 
         {/* Hidden old elements (kept intact, hidden by CSS) */}

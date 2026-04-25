@@ -125,3 +125,27 @@ export async function getInstructions(idea) {
   }
   return res.json();
 }
+
+/**
+ * Convert text to speech via backend ElevenLabs route.
+ * Returns an object URL for audio playback.
+ */
+export async function textToSpeech(text, options = {}) {
+  const res = await fetch(`${BASE_URL}/tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text,
+      voiceId: options.voiceId,
+      modelId: options.modelId,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Text to speech failed');
+  }
+
+  const audioBlob = await res.blob();
+  return URL.createObjectURL(audioBlob);
+}
