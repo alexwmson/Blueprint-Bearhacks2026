@@ -106,20 +106,6 @@ function MockupFollow() {
   );
 }
 
-/* ─── Brick logo mark ─── */
-function BrickMark({ size = 28 }) {
-  const h = Math.round(size * 0.71);
-  const sr = Math.round(size * 0.25);
-  const sy = -Math.round(size * 0.14);
-  return (
-    <svg aria-hidden="true" width={size} height={h + Math.abs(sy)} viewBox={`0 0 ${size} ${h + Math.abs(sy)}`}>
-      <rect x="0" y={Math.abs(sy)} width={size} height={h} rx="3" fill={T.red} />
-      <circle cx={Math.round(size * 0.18)} cy={Math.abs(sy) + Math.round(size * 0.01)} r={sr} fill={T.red} />
-      <circle cx={Math.round(size * 0.68)} cy={Math.abs(sy) + Math.round(size * 0.01)} r={sr} fill={T.red} />
-    </svg>
-  );
-}
-
 /* ─── Upload / Camera icons ─── */
 function IconUpload() {
   return (
@@ -352,7 +338,11 @@ export default function LandingPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <BrickMark size={28} />
+            <img
+              src="/images/image.png"
+              alt="Blueprint logo"
+              style={{ width: 28, height: 28, objectFit: 'contain' }}
+            />
             <span style={{ fontFamily: "'Inter Tight', system-ui, sans-serif", fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: T.ink }}>
               Blueprint
             </span>
@@ -608,11 +598,7 @@ export default function LandingPage() {
             fontFamily: "'Inter Tight', system-ui",
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <svg aria-hidden="true" width="16" height="12" viewBox="0 0 16 12" fill="none">
-                <rect x="0" y="2" width="16" height="10" rx="2" fill={T.red} />
-                <circle cx="4"  cy="2" r="2.5" fill={T.red} />
-                <circle cx="12" cy="2" r="2.5" fill={T.red} />
-              </svg>
+              <img src="/images/image.png" alt="Blueprint logo" style={{ width: 16, height: 12, objectFit: 'contain' }} />
               Blueprint · 2025
             </div>
             <span>Made for Bearhacks</span>

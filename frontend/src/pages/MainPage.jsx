@@ -102,7 +102,7 @@ export default function MainPage() {
           <ChevronLeft /> New scan
         </button>
         <div className="main-header-center">
-          <span className="logo-brick">🧱</span>
+          <img className="logo-image" src="/images/image.png" alt="Blueprint logo" />
           <span className="logo-text">Blueprint</span>
         </div>
         <div className="main-header-right" />

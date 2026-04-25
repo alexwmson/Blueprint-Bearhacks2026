@@ -191,6 +191,12 @@ html, body, #root {
 }
 
 .logo-brick { font-size: 2.4rem; }
+.logo-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
 .logo-text {
   font-size: 2.4rem;
@@ -381,6 +387,7 @@ html, body, #root {
   gap: 8px;
 }
 .main-header-center .logo-brick { font-size: 1.4rem; }
+.main-header-center .logo-image { width: 24px; height: 24px; }
 .main-header-center .logo-text { font-size: 1.4rem; }
 .main-header-right {}
 
@@ -897,6 +904,7 @@ html, body, #root {
   gap: 8px;
 }
 .main-header-center .logo-brick { font-size: 1.2rem; }
+.main-header-center .logo-image { width: 24px; height: 24px; }
 .main-header-center .logo-text {
   font-family: var(--bp-font-sans);
   font-size: 19px;
