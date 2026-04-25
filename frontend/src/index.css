@@ -1,4 +1,9 @@
 /* ═══════════════════════════════════════════════
+   Blueprint — Font Import (must be first rule)
+═══════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,400;9..144,700;9..144,900;9..144,400,1;9..144,700,1;9..144,900,1&family=Inter+Tight:wght@400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════════
    BrickVision — Global Styles
    Dark modern UI with LEGO instruction aesthetic
 ═══════════════════════════════════════════════ */
@@ -754,7 +759,7 @@ html, body, #root {
 
 
 /* ═══════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE (dark theme)
 ═══════════════════════════════════════════════ */
 
 @media (max-width: 640px) {
@@ -779,4 +784,877 @@ html, body, #root {
     gap: 12px;
   }
   .main-header-right { display: none; }
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT DESIGN TOKENS
+   Screen A: Ideas Gallery  ·  Screen B: Instruction Viewer
+═══════════════════════════════════════════════ */
+
+:root {
+  --bp-red:          #E11B22;
+  --bp-yellow:       #FAC80A;
+  --bp-blue:         #1B6FB8;
+  --bp-green:        #00923D;
+  --bp-ink:          #0F0F10;
+  --bp-ink-2:        #3A3A3D;
+  --bp-muted:        #6B6B70;
+  --bp-paper:        #FAFAF7;
+  --bp-card:         #FFFFFF;
+  --bp-cream:        #F2EFE6;
+  --bp-line:         rgba(0,0,0,0.06);
+  --bp-font-display: 'Fraunces', Georgia, serif;
+  --bp-font-sans:    'Inter Tight', system-ui, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — SHARED PRIMITIVES
+═══════════════════════════════════════════════ */
+
+/* 4px brand stripe — three equal hard-edge segments */
+.bp-brand-stripe {
+  height: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+}
+.bp-brand-stripe span:nth-child(1) { background: var(--bp-red); }
+.bp-brand-stripe span:nth-child(2) { background: var(--bp-yellow); }
+.bp-brand-stripe span:nth-child(3) { background: var(--bp-blue); }
+
+/* Italic accent — first word in a Fraunces title */
+.italic-accent { font-style: italic; }
+
+/* Eyebrow label */
+.bp-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--bp-muted);
+  margin-bottom: 12px;
+}
+.bp-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — SCREEN A  (MAIN PAGE / IDEAS GALLERY)
+═══════════════════════════════════════════════ */
+
+/* Root overrides */
+.main-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bp-paper);
+  color: var(--bp-ink);
+  font-family: var(--bp-font-sans);
+  padding-top: 4px; /* brand stripe clearance */
+}
+.main-root.empty-state {
+  align-items: center;
+  justify-content: center;
+}
+.empty-icon { font-size: 4rem; margin-bottom: 16px; }
+.empty-content h2 {
+  font-family: var(--bp-font-display);
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: var(--bp-ink);
+}
+.empty-content p { color: var(--bp-muted); margin-bottom: 24px; }
+
+/* Header */
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--bp-card);
+  border-bottom: 1px solid var(--bp-line);
+  position: sticky;
+  top: 4px;
+  z-index: 100;
+  backdrop-filter: none;
+}
+.main-header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.main-header-center .logo-brick { font-size: 1.2rem; }
+.main-header-center .logo-text {
+  font-family: var(--bp-font-sans);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: var(--bp-ink);
+  background-clip: unset;
+  color: var(--bp-ink);
+}
+.main-header-right {}
+
+/* Action pill (shared by both screens) */
+.main-root .btn-back {
+  background: var(--bp-cream);
+  border: 1px solid var(--bp-line);
+  color: var(--bp-ink-2);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  gap: 5px;
+}
+.main-root .btn-back:hover:not(:disabled) {
+  border-color: rgba(0,0,0,0.14);
+  color: var(--bp-ink);
+  background: var(--bp-cream);
+}
+
+/* Pieces banner → hidden; replaced by inventory strip */
+.pieces-banner { display: none; }
+
+/* Ideas container */
+.ideas-container {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 44px 32px 60px;
+}
+
+/* Inventory strip card */
+.inventory-strip {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 12px;
+  padding: 16px 0;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+.inventory-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 24px;
+}
+.inventory-section + .inventory-section {
+  border-left: 1px solid var(--bp-line);
+}
+.inventory-eyebrow {
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bp-muted);
+}
+.inventory-value {
+  font-family: var(--bp-font-sans);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--bp-ink);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.color-swatches {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 2px;
+}
+.color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+
+/* Filter pills */
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  color: var(--bp-ink-2);
+}
+.filter-pill.active {
+  background: var(--bp-ink);
+  color: #fff;
+  border-color: var(--bp-ink);
+}
+.filter-pill-count { opacity: 0.6; }
+
+/* Page heading */
+.ideas-heading {
+  font-family: var(--bp-font-display);
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.0;
+  color: var(--bp-ink);
+  margin-bottom: 12px;
+}
+.ideas-subheading {
+  font-family: var(--bp-font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--bp-muted);
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+/* Ideas grid — 2 columns */
+.ideas-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Main footer */
+.main-footer {
+  background: var(--bp-card);
+  border-top: 1px solid var(--bp-line);
+  color: var(--bp-muted);
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — IDEA CARD  (collapsed gallery view)
+═══════════════════════════════════════════════ */
+
+.main-root .idea-item {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: none;
+  transition: border-color 0.15s ease;
+}
+.main-root .idea-item:hover { border-color: rgba(0,0,0,0.12); }
+.main-root .idea-item.expanded { border-color: rgba(0,0,0,0.12); box-shadow: none; }
+
+/* Card layout — preview stacked on top */
+.main-root .idea-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  align-items: stretch;
+}
+
+/* Preview area */
+.idea-card-preview {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.idea-card-preview-cat-animals    { background: #FAEEEE; }
+.idea-card-preview-cat-vehicles   { background: #EDF2F7; }
+.idea-card-preview-cat-buildings  { background: #F0EFE3; }
+.idea-card-preview-cat-characters { background: #EFF3EC; }
+.idea-card-preview-cat-furniture  { background: #F2EFE6; }
+.idea-card-preview-cat-other      { background: var(--bp-cream); }
+
+/* Category pill — top-left */
+.idea-cat-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--bp-card);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--bp-ink-2);
+  z-index: 2;
+  text-transform: capitalize;
+}
+
+/* Piece count pill — top-right */
+.idea-count-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(15,15,16,0.85);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  z-index: 2;
+}
+
+/* Preview 3D viewer inside card */
+.main-root .idea-preview-render {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+.main-root .preview-placeholder {
+  width: 100%;
+  height: 100%;
+  font-size: 3.5rem;
+  color: rgba(0,0,0,0.18);
+}
+
+/* Card body */
+.idea-card-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Title and row layout */
+.main-root .idea-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.main-root .idea-category-icon { display: none; }
+.main-root .difficulty-badge   { display: none; }
+.main-root .idea-piece-count   { display: none; }
+
+.main-root .idea-title {
+  font-family: var(--bp-font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--bp-ink);
+}
+
+/* Brick stud difficulty indicator */
+.brick-studs {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.brick-stud {
+  width: 9px;
+  height: 11px;
+  border-radius: 1.5px;
+  background: #E8E5DC;
+}
+.brick-stud.filled { background: var(--bp-yellow); }
+
+/* Description */
+.main-root .idea-description {
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  color: var(--bp-muted);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* idea-footer / expand button */
+.main-root .idea-footer { padding: 0; }
+.main-root .btn-expand {
+  width: 100%;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--bp-line);
+  border-radius: 0;
+  color: var(--bp-muted);
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 20px;
+  letter-spacing: 0;
+}
+.main-root .btn-expand:hover,
+.main-root .btn-expand.active {
+  color: var(--bp-ink);
+  background: rgba(0,0,0,0.02);
+  border-color: var(--bp-line);
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — SCREEN B  (EXPANDED INSTRUCTION VIEW)
+═══════════════════════════════════════════════ */
+
+.main-root .idea-expanded {
+  padding: 0 24px 32px;
+  border-top: 1px solid var(--bp-line);
+  margin-top: 0;
+  background: var(--bp-paper);
+}
+
+/* Section title eyebrow */
+.main-root .section-title {
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--bp-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 3D viewer — mat + surface wrapper */
+.viewer-mat {
+  background: var(--bp-cream);
+  padding: 8px;
+  border-radius: 16px;
+  margin-bottom: 6px;
+}
+.viewer-surface {
+  background: var(--bp-card);
+  border-radius: 10px;
+  height: 380px; /* matches LDrawViewer height="380px" prop */
+  position: relative;
+  overflow: hidden;
+  background-image:
+    linear-gradient(#EEEBDE 0.5px, transparent 0.5px),
+    linear-gradient(90deg, #EEEBDE 0.5px, transparent 0.5px);
+  background-size: 40px 40px;
+  background-color: var(--bp-card);
+}
+
+/* Viewer status pill */
+.viewer-status-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--bp-ink-2);
+  z-index: 3;
+}
+.viewer-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bp-green);
+  flex-shrink: 0;
+}
+
+.main-root .full-model-viewer {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  height: 100%;
+  width: 100%;
+}
+.main-root .viewer-hint {
+  font-family: var(--bp-font-sans);
+  font-size: 11px;
+  color: var(--bp-muted);
+  margin-top: 6px;
+}
+
+/* Piece inventory card */
+.main-root .expanded-section .piece-inventory {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  list-style: none;
+}
+.main-root .piece-inventory-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bp-cream);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.main-root .piece-dot { display: none; }
+
+/* Color swatch inside inventory row */
+.piece-swatch {
+  height: 18px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.piece-inv-name {
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  color: var(--bp-ink);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.piece-inv-count {
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  color: var(--bp-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Instructions loading override */
+.main-root .instructions-loading {
+  color: var(--bp-muted);
+}
+.main-root .spinner {
+  border-color: var(--bp-line);
+  border-top-color: var(--bp-ink);
+}
+
+/* Error banner override */
+.main-root .error-banner {
+  background: rgba(225,27,34,0.06);
+  border-color: rgba(225,27,34,0.2);
+  color: var(--bp-red);
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — STEP VIEWER
+═══════════════════════════════════════════════ */
+
+.step-section-heading {
+  font-family: var(--bp-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--bp-ink);
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+
+/* Autoplay row */
+.step-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  margin-top: 4px;
+}
+
+/* Active step card */
+.main-root .step-card {
+  background: var(--bp-card);
+  border: 2px solid var(--bp-ink);
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: none;
+  margin-bottom: 10px;
+}
+.main-root .step-card.future-step {
+  border: 1px solid var(--bp-line);
+  opacity: 0.55;
+}
+
+/* Card header row */
+.main-root .step-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 24px 12px;
+  background: var(--bp-card);
+  border-bottom: none;
+}
+.step-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+}
+.step-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bp-yellow);
+  border: 2px solid var(--bp-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--bp-font-sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--bp-ink);
+  flex-shrink: 0;
+}
+.step-badge.future {
+  background: var(--bp-cream);
+  border-color: #CCCBC0;
+  color: var(--bp-muted);
+}
+.step-header-text { flex: 1; }
+.step-title-bp {
+  font-family: var(--bp-font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--bp-ink);
+}
+.step-caption-bp {
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  color: var(--bp-muted);
+  margin-top: 2px;
+}
+
+/* Hide old step number / progress */
+.main-root .step-number { display: none; }
+.main-root .step-progress {
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bp-muted);
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* Hide old description (shown in header caption) */
+.main-root .step-description { display: none; }
+
+/* Render wrap — horizontal: scene left + tray right */
+.main-root .step-render-wrap {
+  background: transparent;
+  border: none;
+  padding: 0 24px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Scene preview (wraps the LDrawViewer) */
+.step-scene-preview {
+  flex: 1;
+  height: 280px; /* matches LDrawViewer height="280px" prop */
+  background: var(--bp-paper);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Camera hint pill — top-left of scene */
+.step-view-pill {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-family: var(--bp-font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--bp-ink-2);
+  z-index: 2;
+  text-transform: capitalize;
+}
+
+/* "New pieces outlined" pill — bottom-right of scene */
+.step-new-pill {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: var(--bp-ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-family: var(--bp-font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  z-index: 2;
+}
+
+/* Piece tray — right column, static */
+.main-root .piece-tray {
+  position: static;
+  width: 140px;
+  min-width: 140px;
+  background: var(--bp-paper);
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  backdrop-filter: none;
+  box-shadow: none;
+  max-width: 140px;
+  display: flex;
+  flex-direction: column;
+}
+.main-root .piece-tray-label {
+  font-family: var(--bp-font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bp-muted);
+  margin-bottom: 8px;
+}
+.main-root .piece-tray-count {
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bp-ink);
+  min-width: unset;
+}
+.main-root .piece-tray-desc {
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  color: var(--bp-ink);
+}
+
+/* "X more steps below" placeholder */
+.steps-more-placeholder {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  color: var(--bp-muted);
+  margin: 8px 0;
+}
+
+/* Step navigation footer */
+.main-root .step-nav {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Previous button */
+.main-root .btn-step-nav {
+  background: var(--bp-cream);
+  border: 1px solid var(--bp-line);
+  color: var(--bp-ink-2);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: var(--bp-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.main-root .btn-step-nav:hover:not(:disabled) {
+  border-color: rgba(0,0,0,0.14);
+  color: var(--bp-ink);
+  background: var(--bp-cream);
+}
+/* Next step button (last btn-step-nav in nav row) */
+.main-root .step-nav > .btn-step-nav:last-child {
+  background: var(--bp-ink);
+  color: #fff;
+  border-color: var(--bp-ink);
+}
+.main-root .step-nav > .btn-step-nav:last-child:hover:not(:disabled) {
+  background: var(--bp-ink-2);
+  border-color: var(--bp-ink-2);
+  color: #fff;
+}
+
+/* Step dash indicators */
+.main-root .step-dots { gap: 4px; }
+.main-root .step-dot {
+  width: 20px;
+  height: 4px;
+  border-radius: 999px;
+  background: #E0DED5;
+  transform: none;
+}
+.main-root .step-dot.active,
+.main-root .step-dot.done {
+  background: var(--bp-ink);
+  transform: none;
+}
+
+
+/* ═══════════════════════════════════════════════
+   BLUEPRINT — RESPONSIVE
+═══════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .ideas-list { grid-template-columns: 1fr; }
+  .ideas-heading { font-size: 38px; }
+}
+@media (max-width: 640px) {
+  .main-header { padding: 14px 18px; }
+  .ideas-container { padding: 28px 18px 40px; }
+  .inventory-strip { flex-direction: column; }
+  .inventory-section + .inventory-section {
+    border-left: none;
+    border-top: 1px solid var(--bp-line);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .main-root .step-render-wrap { flex-direction: column; }
+  .main-root .piece-tray { width: 100%; max-width: 100%; min-width: 0; }
 }
