@@ -71,6 +71,9 @@ export default function LDrawViewer({
   const controlsRef = useRef(null);
   const animFrameRef = useRef(null);
   const modelRef = useRef(null);
+  // Incremented every time we start a new load; callbacks check against this
+  // to discard results from superseded in-flight loads.
+  const loadIdRef = useRef(0);
 
   const dispose = useCallback(() => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
@@ -133,13 +136,48 @@ export default function LDrawViewer({
     controls.enabled = interactive;
     controlsRef.current = controls;
 
-    // Animation loop
+    // Animation loop.
+    // IMPORTANT: RAF is scheduled at the END so a throw inside r.render()
+    // stops the loop instead of infinitely re-queuing a broken frame.
     function animate() {
+      const r = rendererRef.current;
+      const s = sceneRef.current;
+      const c = cameraRef.current;
+      const ctrl = controlsRef.current;
+
+      // If the component has been disposed, stop the loop.
+      if (!r || !s || !c) return;
+
+      if (interactive && ctrl) ctrl.update();
+
+      try {
+        r.render(s, c);
+      } catch (err) {
+        console.error('[LDrawViewer] render crash — scanning scene for null materials:', err);
+        // The crash is `object.material.visible` when LDrawLoader assigns null
+        // for a color code not present in the material library. Find and patch
+        // those meshes so the render loop can recover.
+        const FALLBACK_MAT = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        let patchCount = 0;
+        s.traverse((obj) => {
+          if ((obj.isMesh || obj.isLine || obj.isPoints) && obj.material == null) {
+            console.warn('[LDrawViewer] null material on', obj.name || obj.type,
+              'userData:', obj.userData);
+            obj.material = FALLBACK_MAT;
+            patchCount++;
+          }
+        });
+        if (patchCount === 0) {
+          console.error('[LDrawViewer] no null materials found — stopping loop to prevent spam.');
+          return;
+        }
+        console.warn(`[LDrawViewer] patched ${patchCount} null material(s) — resuming.`);
+      }
+
+      // Re-queue only after a successful (or recovered) frame.
       animFrameRef.current = requestAnimationFrame(animate);
-      if (interactive) controls.update();
-      renderer.render(scene, camera);
     }
-    animate();
+    animFrameRef.current = requestAnimationFrame(animate);
 
     // Resize observer
     const ro = new ResizeObserver(() => {
@@ -173,59 +211,91 @@ export default function LDrawViewer({
     if (!pieces || pieces.length === 0) return;
 
     const ldrString = buildLdrString(pieces);
-    const dataUrl = `data:text/plain;base64,${btoa(unescape(encodeURIComponent(ldrString)))}`;
+
+    // Stamp this load so stale callbacks from a previous load are ignored
+    const loadId = ++loadIdRef.current;
 
     const loader = new LDrawLoader();
     loader.setConditionalLineMaterial(LDrawConditionalLineMaterial);
     loader.smoothNormals = true;
     loader.setPartsLibraryPath(PARTS_LIBRARY_PATH);
 
-    loader.load(
-      dataUrl,
-      (group) => {
-        // LDraw uses inverted Y — rotate 180° around X
-        group.rotation.x = Math.PI;
-        scene.add(group);
-        modelRef.current = group;
+    function onModelLoaded(group) {
+      // Discard if a newer load has already started
+      if (loadId !== loadIdRef.current) return;
 
-        // Apply highlight/dim per piece
-        const pieceHighlights = pieces.map((p) => p.highlight !== false);
-        let meshIndex = 0;
-        group.traverse((child) => {
-          if (child.isGroup && child !== group) {
-            const highlighted = pieceHighlights[meshIndex] !== false;
-            applyHighlight(child, highlighted);
-            meshIndex++;
-          }
-        });
+      const scene = sceneRef.current;
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      if (!scene || !camera) return;
 
-        // Fit camera to model
-        const bbox = new THREE.Box3().setFromObject(group);
-        const center = bbox.getCenter(new THREE.Vector3());
-        const size = bbox.getSize(new THREE.Vector3());
-        const radius = Math.max(size.x, size.y, size.z) * 0.5;
+      // LDraw coordinate system has -Y up; rotate 180° around X to correct
+      group.rotation.x = Math.PI;
+      scene.add(group);
+      modelRef.current = group;
 
-        const dir = (CAMERA_PRESETS[cameraHint] || CAMERA_PRESETS.front).clone().normalize();
-        const distance = radius * 3.5;
-
-        camera.position.copy(center).addScaledVector(dir, distance);
-        camera.lookAt(center);
-
-        if (controls) {
-          controls.target.copy(center);
-          controls.update();
+      // Apply highlight/dim per piece index
+      const pieceHighlights = pieces.map((p) => p.highlight !== false);
+      let meshIndex = 0;
+      group.traverse((child) => {
+        if (child.isGroup && child !== group) {
+          applyHighlight(child, pieceHighlights[meshIndex] !== false);
+          meshIndex++;
         }
+      });
 
-        if (onLoad) onLoad();
-      },
-      undefined,
-      (err) => {
-        console.warn('LDrawLoader error (parts library may not be populated yet):', err);
-        // Show a placeholder cube so the UI doesn't feel broken
-        renderFallbackCubes(scene, pieces, camera, controls, cameraHint);
-        if (onLoad) onLoad();
+      // Fit camera to model bounding box
+      const bbox = new THREE.Box3().setFromObject(group);
+      const center = bbox.getCenter(new THREE.Vector3());
+      const size = bbox.getSize(new THREE.Vector3());
+      const radius = Math.max(size.x, size.y, size.z) * 0.5;
+
+      const dir = (CAMERA_PRESETS[cameraHint] || CAMERA_PRESETS.front).clone().normalize();
+      camera.position.copy(center).addScaledVector(dir, radius * 3.5);
+      camera.lookAt(center);
+
+      if (controls) {
+        controls.target.copy(center);
+        controls.update();
       }
-    );
+
+      if (onLoad) onLoad();
+    }
+
+    function onModelError(err) {
+      if (loadId !== loadIdRef.current) return;
+
+      const scene = sceneRef.current;
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+
+      console.warn('[LDrawViewer] LDrawLoader failed, using fallback geometry.');
+      console.warn('[LDrawViewer]', err?.message || err);
+      if (scene && camera) {
+        renderFallbackCubes(scene, pieces, camera, controls, cameraHint);
+      }
+      if (onLoad) onLoad();
+    }
+
+    // preloadMaterials loads LDConfig.ldr which defines all standard LEGO color
+    // codes. Without this, getMaterial() returns null for codes like 1 (Blue)
+    // or 9 (Light Blue), causing Three.js to crash on mesh.material.visible.
+    loader
+      .preloadMaterials('/ldraw/LDConfig.ldr')
+      .catch(() => {
+        // If LDConfig.ldr is missing, fall back to the minimal seed so at
+        // least codes 16 and 24 are defined and the render loop won't crash.
+        console.warn('[LDrawViewer] LDConfig.ldr not found — colours may be wrong');
+        loader.setMaterials([]);
+      })
+      .finally(() => {
+        if (loadId !== loadIdRef.current) return;
+        try {
+          loader.parse(ldrString, onModelLoaded, onModelError);
+        } catch (err) {
+          onModelError(err);
+        }
+      });
   }, [pieces, cameraHint]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

@@ -1,4 +1,4 @@
-# BrickVision
+# Blueprint
 
 > Turn your pile of LEGO bricks into creative builds — powered by AI.
 
@@ -24,13 +24,13 @@ Made at **BearHacks 2026**.
 | 3D Rendering | Three.js + LDrawLoader |
 | Backend | Node.js + Express |
 | Vision | Google Cloud Vision (object localization) |
-| Brick ID | Gemini Vision (`gemini-1.5-flash`) |
-| Build ideas | Claude (`claude-opus-4-5`) |
+| Brick ID | Gemini Vision (`gemini-2.5-flash`) |
+| Build ideas | Claude (`claude-sonnet-4-6`) |
 | Image processing | Sharp (cropping) |
 
 ---
 
-## Prerequisites
+## PrerequisitesTry
 
 - Node.js ≥ 18
 - Google Cloud project with Vision API enabled
