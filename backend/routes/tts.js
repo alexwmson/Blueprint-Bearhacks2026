@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     }
 
     const client = getElevenLabsClient();
-    const selectedVoiceId = voiceId || 'JBFqnCBsd6RMkjVDRZzb';
+    const selectedVoiceId = voiceId || 'wBXNqKUATyqu0RtYt25i';
     const selectedModelId = modelId || 'eleven_multilingual_v2';
 
     const audioStream = await client.textToSpeech.convert(selectedVoiceId, {
