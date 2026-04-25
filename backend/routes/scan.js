@@ -11,12 +11,12 @@ function getGenAI() {
   return genAI;
 }
 
-const SCAN_PROMPT = `You are an expert LEGO piece identifier. Look carefully at this image and identify every individual LEGO brick, plate, tile, or slope you can see.
+const SCAN_PROMPT = `You are an expert LEGO piece identifier. Look carefully at this image and identify every individual LEGO brick, plate, tile, axle, or slope you can see.
 
 For each piece you identify, note:
 - Its color (use standard LEGO colors: red, blue, yellow, green, white, black, gray, orange, purple, brown, tan, dark blue, dark green, dark red, lime green, pink, dark gray, light blue, light gray)
 - Its size (studs wide × studs deep, e.g. 2x4, 1x2, 4x4)
-- Its type (brick, plate, tile, slope, wedge, round brick, round plate)
+- Its type (brick, plate, tile, slope, wedge, axle, wheel, round brick, round plate)
 
 Respond ONLY with a JSON object in this exact format:
 {
@@ -32,7 +32,9 @@ Rules:
 - If a piece is partially obscured but identifiable, include it
 - If something is NOT a LEGO piece, do not include it
 - If you cannot see any LEGO pieces at all, respond with: {"pieces": []}
-- Respond ONLY with the JSON object. No other text, no markdown, no explanation.`;
+- Respond ONLY with the JSON object. No other text, no markdown, no explanation.
+
+Oh also watch out for axles, they look just like plates but have little knubs on two of its sides. If you see one its very likely a 2x2 axle.`;
 
 router.post('/', async (req, res) => {
   try {

@@ -62,9 +62,34 @@ function ldrawDatPlugin() {
           }
         }
 
-        // Return 404 for missing files instead of Vite's SPA index.html fallback
-        const filePath = join(__dirname, 'public', urlPath.split('?')[0]);
+        // Check whether the (possibly rewritten) path exists in public/.
+        const publicDir = join(__dirname, 'public');
+        const filePath = join(publicDir, urlPath.split('?')[0]);
+
         if (!existsSync(filePath)) {
+          // LDrawLoader tries subdirs in order (parts → p → models). If the
+          // requested subdir doesn't have the file but another one does, silently
+          // rewrite to the correct subdir so the browser never sees a 404.
+          const lower2 = urlPath.toLowerCase();
+          if (lower2.startsWith('/ldraw/')) {
+            const afterBase2 = urlPath.slice('/ldraw/'.length); // e.g. "parts/stud4.dat"
+            for (const s1 of SUBDIRS) {
+              if (afterBase2.toLowerCase().startsWith(s1 + '/')) {
+                const filename = afterBase2.slice(s1.length + 1); // e.g. "stud4.dat"
+                for (const s2 of SUBDIRS) {
+                  if (s2 === s1) continue;
+                  const alt = join(publicDir, 'ldraw', s2, filename);
+                  if (existsSync(alt)) {
+                    // Redirect internally — rewrite URL so Vite serves it
+                    req.url = '/ldraw/' + s2 + '/' + filename;
+                    return next();
+                  }
+                }
+                break;
+              }
+            }
+          }
+          // Truly not found anywhere — return 404 so LDrawLoader stops trying
           res.statusCode = 404;
           res.setHeader('Content-Type', 'text/plain');
           res.end('LDraw part not found');

@@ -57,7 +57,7 @@ ${IDEAS_SCHEMA}`,
           content: `I have these LEGO pieces: ${pieceList}
 
 Suggest 4-5 creative things I can build with exactly these pieces. Be creative — think animals, vehicles, buildings, furniture, spaceships, etc.
-Make sure the preview_model uses correct LDU coordinates so pieces fit together properly.`,
+Make sure the preview_model uses correct LDU coordinates so pieces fit together properly. Wheels must be placed on axles, so plan that accordingly.`,
         },
       ],
     });
