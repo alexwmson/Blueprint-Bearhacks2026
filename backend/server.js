@@ -4,6 +4,7 @@ import cors from 'cors';
 
 import uploadRouter from './routes/upload.js';
 import classifyRouter from './routes/classify.js';
+import scanRouter from './routes/scan.js';
 import ideasRouter from './routes/ideas.js';
 import instructionsRouter from './routes/instructions.js';
 
@@ -15,6 +16,7 @@ app.use(express.json({ limit: '20mb' }));
 
 app.use('/api/upload', uploadRouter);
 app.use('/api/classify', classifyRouter);
+app.use('/api/scan', scanRouter);
 app.use('/api/ideas', ideasRouter);
 app.use('/api/instructions', instructionsRouter);
 

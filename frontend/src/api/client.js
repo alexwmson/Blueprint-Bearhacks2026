@@ -1,8 +1,8 @@
 const BASE_URL = '/api';
 
 /**
- * Upload an image to Cloud Vision for object localization.
- * Returns { crops: [{ label, score, boundingBox, croppedImageBase64 }] }
+ * Upload an image. Now uses Cloud Vision label detection.
+ * Returns { labels: [{description, score}], imageBase64 }
  */
 export async function uploadImage(file) {
   const formData = new FormData();
@@ -11,6 +11,23 @@ export async function uploadImage(file) {
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Upload failed');
+  }
+  return res.json();
+}
+
+/**
+ * Scan a full image with Gemini Vision to get a complete piece inventory.
+ * Returns { pieces: ["red 2x4 brick", "blue 1x2 plate", ...] }
+ */
+export async function scanImage(imageBase64, labels) {
+  const res = await fetch(`${BASE_URL}/scan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64, labels }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Scan failed');
   }
   return res.json();
 }

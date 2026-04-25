@@ -1,18 +1,18 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadImage, classifyAllCrops, consolidatePieces, getIdeas } from '../api/client.js';
+import { uploadImage, scanImage, consolidatePieces, getIdeas } from '../api/client.js';
 
 const STAGES = {
   IDLE: 'idle',
   UPLOADING: 'uploading',
-  CLASSIFYING: 'classifying',
+  SCANNING: 'scanning',
   GENERATING: 'generating',
   ERROR: 'error',
 };
 
 const STAGE_LABELS = {
-  uploading: 'Detecting LEGO pieces in your photo…',
-  classifying: 'Identifying each brick…',
+  uploading: 'Analyzing your photo…',
+  scanning: 'Identifying LEGO pieces…',
   generating: 'Dreaming up build ideas…',
 };
 
@@ -22,7 +22,6 @@ export default function LandingPage() {
   const cameraInputRef = useRef(null);
 
   const [stage, setStage] = useState(STAGES.IDLE);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [error, setError] = useState(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -30,35 +29,22 @@ export default function LandingPage() {
     async (file) => {
       setError(null);
       try {
-        // Step 1: Upload → Cloud Vision object localization
+        // Step 1: Upload → Cloud Vision label detection
         setStage(STAGES.UPLOADING);
-        const { crops } = await uploadImage(file);
+        const { labels, imageBase64 } = await uploadImage(file);
 
-        if (!crops || crops.length === 0) {
-          setError('No LEGO pieces were detected in the image. Try a clearer photo with good lighting.');
+        // Step 2: Send full image to Gemini for complete piece inventory
+        setStage(STAGES.SCANNING);
+        const { pieces: rawPieces } = await scanImage(imageBase64, labels);
+
+        if (!rawPieces || rawPieces.length === 0) {
+          setError("We couldn't identify any LEGO pieces in this photo. Try a clearer photo from directly above with good lighting.");
           setStage(STAGES.ERROR);
           return;
         }
 
-        // Step 2: Classify each crop with Gemini Vision (parallel)
-        setStage(STAGES.CLASSIFYING);
-        setProgress({ current: 0, total: crops.length });
-
-        const { descriptions, errorCount } = await classifyAllCrops(crops, (done, total) => {
-          setProgress({ current: done, total });
-        });
-
-        const pieces = consolidatePieces(descriptions);
-
-        if (pieces.length === 0) {
-          if (errorCount === crops.length) {
-            setError(`The AI classifier ran into an error on all ${crops.length} detected objects. Check the backend logs for details.`);
-          } else {
-            setError("We couldn't recognize any LEGO pieces. Try a photo with better lighting or a different angle.");
-          }
-          setStage(STAGES.ERROR);
-          return;
-        }
+        // Consolidate duplicates into counts: ["red 2x4 brick", "red 2x4 brick"] → ["2x red 2x4 brick"]
+        const pieces = consolidatePieces(rawPieces);
 
         // Step 3: Get ideas from Claude
         setStage(STAGES.GENERATING);
@@ -168,17 +154,6 @@ export default function LandingPage() {
           <div className="loading-panel">
             <div className="spinner" aria-label="Loading" />
             <p className="loading-label">{STAGE_LABELS[stage]}</p>
-            {stage === STAGES.CLASSIFYING && progress.total > 0 && (
-              <div className="progress-bar-wrap">
-                <div
-                  className="progress-bar-fill"
-                  style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
-                />
-                <span className="progress-text">
-                  {progress.current} / {progress.total} pieces
-                </span>
-              </div>
-            )}
           </div>
         )}
       </main>
