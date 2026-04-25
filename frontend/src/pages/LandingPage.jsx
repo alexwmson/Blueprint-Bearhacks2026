@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { uploadImage, scanImage, consolidatePieces, getIdeas } from '../api/client.js';
+import { uploadImage, scanImage, consolidatePieces, getIdeas, classifyAllCrops } from '../api/client.js';
 
 /* ─── Brand tokens ─── */
 const T = {
@@ -17,9 +17,21 @@ const T = {
 
 const EASE = [0.22, 1, 0.36, 1];
 
+/* ─── Pipeline toggle ───────────────────────────────────────────
+   'scan'     → single Gemini call on the full image (fast, less precise)
+   'classify' → Cloud Vision object localization + per-crop Gemini calls
+                (slower but identifies each piece individually)
+─────────────────────────────────────────────────────────────── */
+const PIPELINE = 'scan'; // ← flip to 'scan' to use just gemini, classify has cloud vision and gemini
+
 /* ─── Stage labels ─── */
-const STAGES = { IDLE: 'idle', UPLOADING: 'uploading', SCANNING: 'scanning', GENERATING: 'generating', ERROR: 'error' };
-const STAGE_LABELS = { uploading: 'Analyzing your photo…', scanning: 'Identifying LEGO pieces…', generating: 'Dreaming up build ideas…' };
+const STAGES = { IDLE: 'idle', UPLOADING: 'uploading', SCANNING: 'scanning', CLASSIFYING: 'classifying', GENERATING: 'generating', ERROR: 'error' };
+const STAGE_LABELS = {
+  uploading:   'Analyzing your photo…',
+  scanning:    'Identifying LEGO pieces…',
+  classifying: 'Classifying each piece…',
+  generating:  'Dreaming up build ideas…',
+};
 
 /* ══════════════════════════════════════════════════════════════
    SVG MOCKUPS
@@ -233,18 +245,50 @@ export default function LandingPage() {
     setError(null);
     try {
       setStage(STAGES.UPLOADING);
-      const { labels, imageBase64 } = await uploadImage(file);
+      const { labels, imageBase64, crops = [] } = await uploadImage(file);
 
-      setStage(STAGES.SCANNING);
-      const { pieces: rawPieces } = await scanImage(imageBase64, labels);
+      let pieces;
 
-      if (!rawPieces || rawPieces.length === 0) {
-        setError("We couldn't identify any LEGO pieces. Try a clearer photo from above with good lighting.");
-        setStage(STAGES.ERROR);
-        return;
+      if (PIPELINE === 'classify') {
+        // ── Classify pipeline: per-crop Gemini calls ──
+        if (crops.length === 0) {
+          setError("We couldn't detect any LEGO pieces in the photo. Try a clearer photo from above with good lighting.");
+          setStage(STAGES.ERROR);
+          return;
+        }
+
+        setStage(STAGES.CLASSIFYING);
+        console.log(`[Classify pipeline] ${crops.length} crop(s) to classify`);
+
+        const { descriptions, errorCount } = await classifyAllCrops(
+          crops.map((b64) => ({ croppedImageBase64: b64 })),
+        );
+
+        if (errorCount > 0) {
+          console.warn(`[Classify pipeline] ${errorCount} classification(s) failed`);
+        }
+
+        if (!descriptions || descriptions.length === 0) {
+          setError("We couldn't identify any LEGO pieces. Try a clearer photo from above with good lighting.");
+          setStage(STAGES.ERROR);
+          return;
+        }
+
+        pieces = consolidatePieces(descriptions);
+      } else {
+        // ── Scan pipeline: single Gemini call on the full image ──
+        setStage(STAGES.SCANNING);
+        const { pieces: rawPieces } = await scanImage(imageBase64, labels);
+
+        if (!rawPieces || rawPieces.length === 0) {
+          setError("We couldn't identify any LEGO pieces. Try a clearer photo from above with good lighting.");
+          setStage(STAGES.ERROR);
+          return;
+        }
+
+        pieces = consolidatePieces(rawPieces);
       }
 
-      const pieces = consolidatePieces(rawPieces);
       setStage(STAGES.GENERATING);
       const ideasData = await getIdeas(pieces);
       navigate('/ideas', { state: { ideas: ideasData.ideas, pieces } });
