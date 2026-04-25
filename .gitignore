@@ -6,3 +6,5 @@ google-credentials.json
 *.log
 .DS_Store
 Thumbs.db
+frontend/public/ldraw/p/
+frontend/public/ldraw/parts/

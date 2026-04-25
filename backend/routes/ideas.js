@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
     const client = getClaude();
 
     const message = await client.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       system: `You are a creative LEGO building expert for children.
 ${LDU_SYSTEM_PROMPT}
@@ -57,7 +57,7 @@ ${IDEAS_SCHEMA}`,
           content: `I have these LEGO pieces: ${pieceList}
 
 Suggest 4-5 creative things I can build with exactly these pieces. Be creative — think animals, vehicles, buildings, furniture, spaceships, etc.
-Make sure the preview_model uses correct LDU coordinates so pieces fit together properly.`,
+Make sure the preview_model uses correct LDU coordinates so pieces fit together properly. Wheels must be placed on axles, so plan that accordingly.`,
         },
       ],
     });

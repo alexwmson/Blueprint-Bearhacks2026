@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
     const client = getClaude();
 
     const message = await client.messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 8192,
       system: `You are a LEGO building instruction designer. Create clear, step-by-step building instructions.
 ${LDU_SYSTEM_PROMPT}
