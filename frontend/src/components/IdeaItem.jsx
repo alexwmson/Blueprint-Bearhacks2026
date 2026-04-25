@@ -3,8 +3,6 @@ import LDrawViewer from './LDrawViewer.jsx';
 import StepViewer from './StepViewer.jsx';
 import { getInstructions } from '../api/client.js';
 
-const DIFFICULTY_LABELS = ['', 'Easy', 'Easy', 'Medium', 'Hard', 'Expert'];
-const DIFFICULTY_COLORS = ['', '#4ade80', '#4ade80', '#facc15', '#fb923c', '#f87171'];
 const CATEGORY_ICONS = {
   building: '🏠',
   vehicle: '🚗',
@@ -71,19 +69,6 @@ const ChevronUp = () => (
   </svg>
 );
 
-/* Brick stud difficulty indicator — 3 studs filled up to difficulty level */
-function BrickStuds({ rating }) {
-  const MAX = 3;
-  const filled = Math.max(0, Math.min(MAX, Math.round((rating || 1) / 2)));
-  return (
-    <div className="brick-studs">
-      {Array.from({ length: MAX }).map((_, i) => (
-        <span key={i} className={`brick-stud${i < filled ? ' filled' : ''}`} />
-      ))}
-    </div>
-  );
-}
-
 /**
  * IdeaItem — one idea card, collapsible.
  *
@@ -117,8 +102,6 @@ export default function IdeaItem({ idea, index }) {
   }, [expanded, instructions, loadingInstructions, idea]);
 
   const previewPieces = idea.preview_model?.pieces || [];
-  const difficultyLabel = DIFFICULTY_LABELS[idea.difficulty_rating] || 'Medium';
-  const difficultyColor = DIFFICULTY_COLORS[idea.difficulty_rating] || '#facc15';
   const categoryIcon = CATEGORY_ICONS[idea.category] || '⭐';
   const catBgClass = CATEGORY_BG[idea.category?.toLowerCase()] || 'idea-card-preview-cat-other';
 
@@ -171,15 +154,6 @@ export default function IdeaItem({ idea, index }) {
               {/* Hidden original elements — kept for semantics */}
               <span className="idea-category-icon">{categoryIcon}</span>
               <h3 className="idea-title">{idea.title}</h3>
-              {/* Old difficulty badge hidden via CSS, brick studs shown instead */}
-              <span
-                className="difficulty-badge"
-                style={{ '--badge-color': difficultyColor }}
-              >
-                {difficultyLabel}
-              </span>
-              {/* Brick stud difficulty */}
-              <BrickStuds rating={idea.difficulty_rating} />
             </div>
             <p className="idea-description">{idea.short_description}</p>
             {idea.pieces_used && idea.pieces_used.length > 0 && (
