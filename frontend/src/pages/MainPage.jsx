@@ -116,13 +116,14 @@ export default function MainPage() {
 
       {/* Header */}
       <header className="main-header">
+        <button className="btn btn-back" onClick={() => navigate('/')}>
+          <ChevronLeft /> New scan
+        </button>
         <div className="main-header-center">
           <img className="logo-image" src="/images/image.png" alt="Blueprint logo" />
           <span className="logo-text">Blueprint</span>
         </div>
-        <button className="btn btn-back" onClick={() => navigate('/')}>
-          <ChevronLeft /> New scan
-        </button>
+        <div className="main-header-right" />
       </header>
 
       {/* Pieces banner — hidden via CSS; data shown in inventory strip */}
