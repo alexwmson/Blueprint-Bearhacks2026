@@ -88,7 +88,7 @@ export default function MainPage() {
           <span /><span /><span />
         </div>
         <div className="empty-content">
-          <div className="empty-icon">🧱</div>
+          <img className="empty-icon" src="/images/image.png" alt="Blueprint logo" />
           <h2>No ideas found</h2>
           <p>It looks like we lost the results. Try scanning your pieces again.</p>
           <button className="btn btn-back" onClick={() => navigate('/')}>
