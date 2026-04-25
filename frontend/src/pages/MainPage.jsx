@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import IdeaItem from '../components/IdeaItem.jsx';
 
@@ -41,16 +41,30 @@ function totalPieceCount(pieces) {
   }, 0);
 }
 
+function ideaCategoryKey(idea) {
+  const cat = (idea?.category || 'other').toLowerCase();
+  return cat.endsWith('s') ? cat : `${cat}s`;
+}
+
 /* Derive category counts from ideas */
 function categoryCounts(ideas) {
   const map = {};
   ideas.forEach((idea) => {
-    const cat = idea.category || 'other';
-    /* Normalize: "vehicle" → "vehicles", "building" → "buildings", etc. */
-    const label = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase() + (cat.endsWith('s') ? '' : 's');
-    map[label] = (map[label] || 0) + 1;
+    const key = ideaCategoryKey(idea);
+    map[key] = (map[key] || 0) + 1;
   });
   return map;
+}
+
+function categoryLabel(categoryKey) {
+  const singular = categoryKey.endsWith('s') ? categoryKey.slice(0, -1) : categoryKey;
+  if (!singular) return 'Other';
+  return singular.charAt(0).toUpperCase() + singular.slice(1) + 's';
+}
+
+function filterIdeasByCategory(ideas, activeCategory) {
+  if (activeCategory === 'all') return ideas;
+  return ideas.filter((idea) => ideaCategoryKey(idea) === activeCategory);
 }
 
 /* Chevron SVG */
@@ -64,6 +78,7 @@ export default function MainPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { ideas = [], pieces = [] } = location.state || {};
+  const [activeCategory, setActiveCategory] = useState('all');
 
   if (!ideas || ideas.length === 0) {
     return (
@@ -86,8 +101,11 @@ export default function MainPage() {
 
   const colors = extractColors(pieces);
   const total = totalPieceCount(pieces) || pieces.length;
-  const catMap = categoryCounts(ideas);
-  const categories = Object.entries(catMap);
+  const categories = useMemo(() => Object.entries(categoryCounts(ideas)), [ideas]);
+  const filteredIdeas = useMemo(
+    () => filterIdeasByCategory(ideas, activeCategory),
+    [ideas, activeCategory]
+  );
 
   return (
     <div className="main-root">
@@ -170,21 +188,30 @@ export default function MainPage() {
           </div>
         </div>
 
-        {/* Filter pills — visual only; TODO: requires logic change — out of scope */}
+        {/* Filter pills */}
         <div className="filter-pills">
-          <span className="filter-pill active">
+          <button
+            type="button"
+            className={`filter-pill ${activeCategory === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveCategory('all')}
+          >
             All <span className="filter-pill-count">{ideas.length}</span>
-          </span>
-          {categories.map(([cat, count]) => (
-            <span key={cat} className="filter-pill">
-              {cat} <span className="filter-pill-count">{count}</span>
-            </span>
+          </button>
+          {categories.map(([categoryKey, count]) => (
+            <button
+              type="button"
+              key={categoryKey}
+              className={`filter-pill ${activeCategory === categoryKey ? 'active' : ''}`}
+              onClick={() => setActiveCategory(categoryKey)}
+            >
+              {categoryLabel(categoryKey)} <span className="filter-pill-count">{count}</span>
+            </button>
           ))}
         </div>
 
         {/* Ideas grid */}
         <div className="ideas-list">
-          {ideas.map((idea, index) => (
+          {filteredIdeas.map((idea, index) => (
             <IdeaItem key={index} idea={idea} index={index} />
           ))}
         </div>

@@ -1015,7 +1015,7 @@ html, body, #root {
   font-family: var(--bp-font-sans);
   font-size: 13px;
   font-weight: 500;
-  cursor: default;
+  cursor: pointer;
   background: var(--bp-card);
   border: 1px solid var(--bp-line);
   color: var(--bp-ink-2);
