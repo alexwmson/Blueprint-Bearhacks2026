@@ -6,42 +6,36 @@ import { uploadImage, classifyAllCrops, consolidatePieces, getIdeas } from '../a
 
 /* ─── Brand tokens ─────────────────────────────── */
 const T = {
-  red:    '#E11B22',
+  red: '#E11B22',
   yellow: '#FAC80A',
-  blue:   '#1B6FB8',
-  ink:    '#0F0F10',
-  muted:  '#6B6B70',
-  paper:  '#FAFAF7',
-  line:   'rgba(0,0,0,0.06)',
-  white:  '#ffffff',
+  blue: '#1B6FB8',
+  ink: '#0F0F10',
+  muted: '#6B6B70',
+  paper: '#FAFAF7',
+  line: 'rgba(0,0,0,0.06)',
+  white: '#ffffff',
 };
 
 /* ─── Motion constants ──────────────────────────── */
 const EASE = [0.22, 1, 0.36, 1];
 
-/* ─── Logo mark SVG ─────────────────────────────── */
-function BrickMark({ size = 28 }) {
-  const h = Math.round(size * 20 / 28);
-  const studR = Math.round(size * 7 / 28);
-  const studY = -Math.round(size * 4 / 28);
+/* ─── Logo mark ─────────────────────────────────── */
+function BrickMark({ size = 36 }) {
   return (
-    <svg
-      aria-hidden="true"
-      width={size} height={h + Math.abs(studY)}
-      viewBox={`0 0 ${size} ${h + Math.abs(studY)}`}
-      style={{ overflow: 'visible', flexShrink: 0 }}
-    >
-      <rect x={0} y={Math.abs(studY)} width={size} height={h} rx={3} fill={T.red} />
-      <circle cx={4 + studR} cy={studY + Math.abs(studY)} r={studR} fill={T.red} />
-      <circle cx={17 + studR} cy={studY + Math.abs(studY)} r={studR} fill={T.red} />
-    </svg>
+    <img
+      src="/images/Blueprint_profile_blank.png"
+      alt="Blueprint logo"
+      width={size}
+      height={size}
+      style={{ flexShrink: 0, display: 'block', objectFit: 'contain' }}
+    />
   );
 }
 
 /* ─── Card 1 mockup: Scan bricks ────────────────── */
 function ScanMockup() {
   return (
-    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display:'block' }}>
+    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display: 'block' }}>
       {/* red 2x4 brick */}
       <rect x="20" y="60" width="80" height="40" rx="4" fill={T.red} />
       <circle cx="38" cy="56" r="8" fill={T.red} />
@@ -67,7 +61,7 @@ function ScanMockup() {
 /* ─── Card 2 mockup: Pick an idea ───────────────── */
 function IdeaMockup() {
   return (
-    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display:'block' }}>
+    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display: 'block' }}>
       {/* left card rotated -4deg */}
       <g transform="translate(38,70) rotate(-4) translate(-38,-70)">
         <rect x="14" y="28" width="50" height="68" rx="5" fill="white" stroke={T.line} strokeWidth="1" />
@@ -94,7 +88,7 @@ function IdeaMockup() {
 /* ─── Card 3 mockup: Follow the build ───────────── */
 function InstructionMockup() {
   return (
-    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display:'block' }}>
+    <svg aria-hidden="true" width="100%" height="140" viewBox="0 0 220 140" style={{ display: 'block' }}>
       <rect x="28" y="16" width="164" height="108" rx="5" fill="white" stroke={T.ink} strokeWidth="2" />
       {/* step circle */}
       <circle cx="50" cy="37" r="11" fill={T.yellow} />
@@ -191,7 +185,7 @@ function CTAButton({ bg, ring, label, icon: Icon, ariaLabel, onClick, reduced })
         outline: 'none',
       }}
       onFocus={(e) => { e.currentTarget.style.boxShadow = `0 0 0 2px ${ring}`; }}
-      onBlur={(e)  => { e.currentTarget.style.boxShadow = 'none'; }}
+      onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
     >
       <Icon size={16} aria-hidden="true" />
       {label}
@@ -203,15 +197,15 @@ function CTAButton({ bg, ring, label, icon: Icon, ariaLabel, onClick, reduced })
    MAIN COMPONENT
 ═══════════════════════════════════════════════════ */
 export default function LandingPage({ onUpload }) {
-  const navigate    = useNavigate();
-  const fileRef     = useRef(null);
-  const cameraRef   = useRef(null);
-  const heroRef     = useRef(null);
-  const reduced     = useReducedMotion();
+  const navigate = useNavigate();
+  const fileRef = useRef(null);
+  const cameraRef = useRef(null);
+  const heroRef = useRef(null);
+  const reduced = useReducedMotion();
   const { scrollY } = useScroll();
 
   // Header scroll effect
-  const headerBg     = useTransform(scrollY, [0, 100], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.85)']);
+  const headerBg = useTransform(scrollY, [0, 100], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.85)']);
   const headerBorder = useTransform(scrollY, [0, 100], ['rgba(0,0,0,0)', 'rgba(0,0,0,0.08)']);
 
   // ── inject Google Font ──
@@ -219,8 +213,8 @@ export default function LandingPage({ onUpload }) {
     const id = 'blueprint-font';
     if (!document.getElementById(id)) {
       const link = document.createElement('link');
-      link.id   = id;
-      link.rel  = 'stylesheet';
+      link.id = id;
+      link.rel = 'stylesheet';
       link.href = 'https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700&display=swap';
       document.head.appendChild(link);
     }
@@ -233,7 +227,7 @@ export default function LandingPage({ onUpload }) {
     try {
       const { crops } = await uploadImage(file);
       if (!crops?.length) return;
-      const { descriptions } = await classifyAllCrops(crops, () => {});
+      const { descriptions } = await classifyAllCrops(crops, () => { });
       const pieces = consolidatePieces(descriptions);
       const ideasData = await getIdeas(pieces);
       navigate('/ideas', { state: { ideas: ideasData.ideas, pieces } });
@@ -257,12 +251,12 @@ export default function LandingPage({ onUpload }) {
   const line3 = 'you can'.split(' ');
   const line4 = ['imagine'];
   const allWords = [
-    ...line1.map(w => ({ w, color: T.ink,   nl: false })),
-    { w: '\n',     color: T.ink, nl: true  },
-    ...line2.map(w => ({ w, color: T.red,   nl: false })),
-    ...line3.map(w => ({ w, color: T.ink,   nl: false })),
-    { w: '\n',     color: T.ink, nl: true  },
-    ...line4.map(w => ({ w, color: T.blue,  nl: false })),
+    ...line1.map(w => ({ w, color: T.ink, nl: false })),
+    { w: '\n', color: T.ink, nl: true },
+    ...line2.map(w => ({ w, color: T.red, nl: false })),
+    ...line3.map(w => ({ w, color: T.ink, nl: false })),
+    { w: '\n', color: T.ink, nl: true },
+    ...line4.map(w => ({ w, color: T.blue, nl: false })),
   ];
 
   const containerVariants = {
@@ -271,11 +265,11 @@ export default function LandingPage({ onUpload }) {
   };
   const childVariant = {
     hidden: { opacity: 0, y: 20 },
-    show:   { opacity: 1, y: 0, transition: { duration: reduced ? 0 : 0.6, ease: EASE } },
+    show: { opacity: 1, y: 0, transition: { duration: reduced ? 0 : 0.6, ease: EASE } },
   };
   const wordVariants = {
     hidden: { opacity: 0, y: 20 },
-    show:   { opacity: 1, y: 0 },
+    show: { opacity: 1, y: 0 },
   };
 
   return (
@@ -313,7 +307,7 @@ export default function LandingPage({ onUpload }) {
       >
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <BrickMark size={28} />
+          <BrickMark size={36} />
           <span style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: T.ink }}>
             Blueprint
           </span>
@@ -412,7 +406,7 @@ export default function LandingPage({ onUpload }) {
               reduced={reduced}
               onClick={() => cameraRef.current?.click()}
             />
-            <input ref={fileRef}   type="file" accept="image/*"                    style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0], 'upload')} />
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0], 'upload')} />
             <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0], 'camera')} />
           </motion.div>
 
@@ -554,13 +548,16 @@ export default function LandingPage({ onUpload }) {
           flexWrap: 'wrap',
           gap: 8,
         }}>
-          {/* Left: mini brick + name */}
+          {/* Left: logo + name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg aria-hidden="true" width="16" height="12" viewBox="0 0 16 12">
-              <rect x="0" y="3" width="16" height="9" rx="2" fill={T.red} />
-              <circle cx="4"  cy="3" r="3" fill={T.red} />
-              <circle cx="12" cy="3" r="3" fill={T.red} />
-            </svg>
+            <img
+              src="/images/Blueprint_profile_blank.png"
+              alt=""
+              aria-hidden="true"
+              width={20}
+              height={20}
+              style={{ display: 'block', objectFit: 'contain' }}
+            />
             Blueprint · 2025
           </div>
           <span>Made for Bearhacks</span>
