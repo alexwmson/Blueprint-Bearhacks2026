@@ -130,33 +130,6 @@ export default function StepViewer({ instructions }) {
         </div>
       </div>
 
-      {/* Future step previews (collapsed shell) */}
-      {futureSteps.map((fStep, fi) => (
-        <div key={fStep.step_number} className="step-card future-step">
-          <div className="step-card-header">
-            <div className="step-header-left">
-              <div className="step-badge future">{fStep.step_number}</div>
-              <div className="step-header-text">
-                <div className="step-title-bp">{fStep.description}</div>
-              </div>
-            </div>
-            <span className="step-progress">Step {futureStart + fi + 1} / {totalSteps}</span>
-          </div>
-          {/* Hidden old elements */}
-          <span className="step-number">Step {fStep.step_number}</span>
-          <p className="step-description">{fStep.description}</p>
-          {/* No render body for future steps */}
-          <div className="step-render-wrap" />
-        </div>
-      ))}
-
-      {/* "X more steps below" placeholder */}
-      {remainingAfter > 0 && (
-        <div className="steps-more-placeholder">
-          {remainingAfter} more step{remainingAfter !== 1 ? 's' : ''} below
-        </div>
-      )}
-
       {/* Navigation footer */}
       <div className="step-nav">
         <button
