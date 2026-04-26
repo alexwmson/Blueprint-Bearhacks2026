@@ -991,8 +991,60 @@ html, body, #root {
   flex-shrink: 0;
 }
 
-/* Filter pills */
-.filter-pills {
+/* Piece model strip */
+.piece-model-strip {
+  background: var(--bp-card);
+  border: 1px solid var(--bp-line);
+  border-radius: 12px;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.piece-model-label {
+  padding: 0 20px;
+  border-right: 1px solid var(--bp-line);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.piece-model-scroll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+}
+.piece-model-scroll::-webkit-scrollbar { display: none; }
+.piece-thumb-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+.piece-thumb-cell + .piece-thumb-cell {
+  border-left: 1px solid var(--bp-line);
+}
+.piece-thumb-canvas {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bp-paper);
+}
+.piece-thumb-count {
+  font-family: var(--bp-font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--bp-ink-2);
+  letter-spacing: -0.01em;
+}
+
+/* Filter pills */.filter-pills {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;

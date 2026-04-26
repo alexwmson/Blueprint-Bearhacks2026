@@ -11,14 +11,31 @@ function getGenAI() {
   return genAI;
 }
 
-const CLASSIFY_PROMPT = `You are a LEGO piece identifier. Look at this image and determine if it shows a LEGO brick or plate.
-If it is a LEGO piece, respond with ONLY a JSON object in this exact format: {"description": "color size type"}
-Examples: {"description": "red 2x4 brick"}, {"description": "blue 1x2 plate"}, {"description": "yellow 2x2 brick"}
-If the image does NOT show a LEGO piece, respond with ONLY: {"description": "none"}
-Use common LEGO colors (red, blue, yellow, green, white, black, gray, orange, purple, brown, tan, dark blue, dark green, dark red, lime green, pink, dark gray, light blue, light gray).
-Use sizes like 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 2x2, 2x3, 2x4, 2x6, 2x8, 4x4, 4x6, 4x8, 6x6, etc.
-Use types: brick, plate, tile, slope, wedge, technic brick, round brick, round plate.
-Respond with ONLY the JSON object, no other text.`;
+const CLASSIFY_PROMPT = `You are an expert LEGO piece identifier. This image shows a cropped region from a photo of loose LEGO bricks. The crop may contain ONE piece or MULTIPLE pieces if the bounding box captured more than one.
+
+List EVERY LEGO piece visible in this crop. Output ONLY a JSON object in this exact format:
+{"pieces": ["color size type", "color size type", ...]}
+
+If the crop contains no LEGO pieces at all, output: {"pieces": []}
+
+Examples:
+{"pieces": ["red 2x4 brick"]}
+{"pieces": ["blue 1x2 plate", "yellow 2x2 brick"]}
+{"pieces": ["gray 2x2 axle"]}
+{"pieces": ["black wheel"]}
+{"pieces": []}
+
+Colors: red, blue, yellow, green, white, black, gray, orange, purple, brown, tan, dark blue, dark green, lime, pink, light gray, dark gray
+Sizes: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 2x2, 2x3, 2x4, 2x6, 2x8, 4x4, 4x6
+Types: brick, plate, tile, slope, axle, wheel, round brick, round plate
+
+Important notes:
+- Axles look almost identical to plates but have two small protruding pins/knubs on opposite sides — call it a "2x2 axle"
+- Slopes have one visibly angled/sloped face — call it a "slope"
+- Wheels are round like a coin or tire — call it a "wheel"
+- If a piece is partially cut off but identifiable, include it
+- Give your best guess for ambiguous pieces rather than omitting them
+- Respond with ONLY the JSON object. No explanation, no markdown, no extra text.`;
 
 router.post('/', async (req, res) => {
   try {
@@ -42,16 +59,27 @@ router.post('/', async (req, res) => {
 
     const text = result.response.text().trim();
 
-    // Extract JSON from response (in case model adds extra text)
-    const jsonMatch = text.match(/\{[^}]+\}/);
+    // Strip markdown fences if present, then extract JSON
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return res.json({ description: 'none' });
+      console.warn('[Classify] No JSON in response:', text.slice(0, 100));
+      return res.json({ pieces: [] });
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    res.json({ description: parsed.description || 'none' });
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch {
+      console.warn('[Classify] JSON parse failed:', jsonMatch[0]);
+      return res.json({ pieces: [] });
+    }
+
+    const pieces = Array.isArray(parsed.pieces) ? parsed.pieces.filter(Boolean) : [];
+    console.log(`[Classify] → [${pieces.join(', ')}]`);
+    res.json({ pieces });
   } catch (err) {
-    console.error('Classify error:', err);
+    console.error('[Classify] error:', err);
     res.status(500).json({ error: err.message });
   }
 });

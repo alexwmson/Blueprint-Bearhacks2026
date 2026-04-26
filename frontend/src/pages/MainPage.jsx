@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import IdeaItem from '../components/IdeaItem.jsx';
+import LDrawViewer from '../components/LDrawViewer.jsx';
 
 /* Derive unique color names from piece description strings */
 const LEGO_COLOR_HEX = {
@@ -51,6 +52,29 @@ function categoryCounts(ideas) {
     map[label] = (map[label] || 0) + 1;
   });
   return map;
+}
+
+/* Parse consolidated piece strings ("2x red 2x4 brick") into {count, description} */
+function parsePiecesForStrip(pieces) {
+  return pieces
+    .map((p) => {
+      const m = typeof p === 'string' ? p.match(/^(\d+)x\s+(.+)$/) : null;
+      if (m) return { count: parseInt(m[1], 10), description: m[2] };
+      return { count: 1, description: String(p) };
+    })
+    .filter((p) => p.description && p.description !== 'none');
+}
+
+function PieceThumb({ description, count }) {
+  const pieces = [{ description, x: 0, y: 0, z: 0, rotation: 0 }];
+  return (
+    <div className="piece-thumb-cell">
+      <div className="piece-thumb-canvas">
+        <LDrawViewer pieces={pieces} width="72px" height="72px" interactive={false} cameraHint="front" />
+      </div>
+      <span className="piece-thumb-count">×{count}</span>
+    </div>
+  );
 }
 
 /* Chevron SVG */
@@ -169,6 +193,20 @@ export default function MainPage() {
             <span className="inventory-value">{ideas.length}</span>
           </div>
         </div>
+
+        {/* Piece model strip */}
+        {pieces.length > 0 && (
+          <div className="piece-model-strip">
+            <div className="piece-model-label">
+              <span className="inventory-eyebrow">Your Pieces</span>
+            </div>
+            <div className="piece-model-scroll">
+              {parsePiecesForStrip(pieces).map((p, i) => (
+                <PieceThumb key={i} description={p.description} count={p.count} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Filter pills — visual only; TODO: requires logic change — out of scope */}
         <div className="filter-pills">

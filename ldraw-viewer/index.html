@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LDraw Viewer</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.172.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.172.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 12px 20px;
+      background: #1a1d26;
+      border-bottom: 1px solid #2c3148;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fbbf24;
+      letter-spacing: -0.01em;
+    }
+    header span {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .sidebar {
+      width: 340px;
+      flex-shrink: 0;
+      background: #12141c;
+      border-right: 1px solid #2c3148;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 10px;
+    }
+
+    .sidebar label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #64748b;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 0;
+      background: #1a1d26;
+      border: 1px solid #2c3148;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: #3d4466; }
+
+    button {
+      background: #fbbf24;
+      color: #0f1117;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    button:hover { background: #f59e0b; }
+    button:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+
+    #status {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      min-height: 1.4em;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+    #status.error { color: #f87171; }
+    #status.ok    { color: #4ade80; }
+
+    .resolved-list {
+      font-size: 0.72rem;
+      color: #64748b;
+      max-height: 130px;
+      overflow-y: auto;
+      background: #1a1d26;
+      border: 1px solid #2c3148;
+      border-radius: 6px;
+      padding: 6px 10px;
+      flex-shrink: 0;
+      display: none;
+    }
+    .resolved-list.visible { display: block; }
+    .resolved-list div { padding: 1px 0; }
+    .resolved-list .miss { color: #f87171; }
+    .resolved-list .hit  { color: #86efac; }
+
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      background: #0a0c12;
+    }
+    #canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,17,23,0.75);
+      border: 1px solid #2c3148;
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.72rem;
+      color: #64748b;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .empty-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      color: #2c3148;
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .empty-msg svg { opacity: 0.3; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LDraw Viewer</h1>
+    <span>Paste JSON → Render 3D model</span>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <label for="json-input">JSON input</label>
+      <textarea
+        id="json-input"
+        spellcheck="false"
+        placeholder='Paste any JSON with a "pieces" array:
+{
+  "pieces": [
+    {
+      "description": "red 2x4 brick",
+      "x": 0, "y": 0, "z": 0,
+      "rotation": 0
+    }
+  ]
+}'
+      ></textarea>
+
+      <label for="ldraw-path" style="margin-top:8px;">LDraw library URL</label>
+      <input
+        id="ldraw-path"
+        type="text"
+        value="http://localhost:5173/ldraw/"
+        spellcheck="false"
+        style="
+          background:#1a1d26;border:1px solid #2c3148;border-radius:6px;
+          color:#f1f5f9;font-size:0.78rem;padding:6px 10px;width:100%;
+          font-family:inherit;outline:none;
+        "
+      />
+      <div style="font-size:0.7rem;color:#475569;margin-top:3px;line-height:1.4;">
+        Needs the Vite dev server running.<br>
+        <code style="color:#64748b;">cd frontend &amp;&amp; npm run dev</code>
+      </div>
+
+      <button id="render-btn">Render</button>
+
+      <div id="status">Paste JSON and click Render.</div>
+
+      <div class="resolved-list" id="resolved-list"></div>
+    </aside>
+
+    <div id="canvas-wrap">
+      <div class="empty-msg" id="empty-msg">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="8" y="20" width="32" height="12" rx="2"/>
+          <rect x="14" y="14" width="8" height="6" rx="1"/>
+          <rect x="26" y="14" width="8" height="6" rx="1"/>
+          <circle cx="14" cy="36" r="3"/>
+          <circle cx="34" cy="36" r="3"/>
+        </svg>
+        <span>No model loaded</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { LDrawLoader } from 'three/addons/loaders/LDrawLoader.js';
+    import { LDrawConditionalLineMaterial } from 'three/addons/materials/LDrawConditionalLineMaterial.js';
+
+    // ─────────────────────────────────────────────────────────────────
+    // partsMap logic — verbatim from frontend/src/lib/partsMap.js
+    // ─────────────────────────────────────────────────────────────────
+
+    // Read from the UI input; falls back to Vite dev server default.
+    function getPartsLibraryPath() {
+      return document.getElementById('ldraw-path').value.trim().replace(/\/?$/, '/');
+    }
+
+    const PARTS_MAP = {
+      // Bricks
+      '1x1 brick': '3005.dat',
+      '1x2 brick': '3004.dat',
+      '1x3 brick': '3622.dat',
+      '1x4 brick': '3010.dat',
+      '1x6 brick': '3009.dat',
+      '1x8 brick': '3008.dat',
+      '1x10 brick': '6111.dat',
+      '1x12 brick': '6112.dat',
+      '1x16 brick': '2465.dat',
+      '2x2 brick': '3003.dat',
+      '2x3 brick': '3002.dat',
+      '2x4 brick': '3001.dat',
+      '2x6 brick': '2456.dat',
+      '2x8 brick': '3007.dat',
+      '2x10 brick': '3006.dat',
+      '4x4 brick': '2356.dat',
+      '4x6 brick': '2356.dat',
+      // Plates
+      '1x1 plate': '3024.dat',
+      '1x2 plate': '3023.dat',
+      '1x3 plate': '3623.dat',
+      '1x4 plate': '3710.dat',
+      '1x6 plate': '3666.dat',
+      '1x8 plate': '3460.dat',
+      '1x10 plate': '4477.dat',
+      '1x12 plate': '60479.dat',
+      '2x2 plate': '3022.dat',
+      '2x3 plate': '3021.dat',
+      '2x4 plate': '3020.dat',
+      '2x6 plate': '3795.dat',
+      '2x8 plate': '3034.dat',
+      '2x10 plate': '3832.dat',
+      '4x4 plate': '3031.dat',
+      '4x6 plate': '3032.dat',
+      '4x8 plate': '3035.dat',
+      '6x8 plate': '3036.dat',
+      '6x10 plate': '3033.dat',
+      '6x12 plate': '3028.dat',
+      // Slopes
+      '1x2 slope': '3040.dat',
+      '1x3 slope': '4286.dat',
+      '1x4 slope': '3037.dat',
+      '2x2 slope': '3039.dat',
+      '2x3 slope': '3298.dat',
+      '2x4 slope': '3037.dat',
+      // Tiles
+      '1x1 tile': '3070b.dat',
+      '1x2 tile': '3069b.dat',
+      '1x4 tile': '2431.dat',
+      '1x6 tile': '6636.dat',
+      '1x8 tile': '4162.dat',
+      '2x2 tile': '3068b.dat',
+      '2x4 tile': '87079.dat',
+      // Round & Special
+      '1x1 round brick': '3062b.dat',
+      '1x1 round plate': '4073.dat',
+      '2x2 round brick': '3941.dat',
+      '2x2 round plate': '4150.dat',
+      '2x2 corner brick': '2357.dat',
+      '2x2 corner plate': '2420.dat',
+      // Wheels, Tires & Axles
+      'wheel small': '4624.dat',
+      'wheel medium': '6014.dat',
+      'wheel large': '2903.dat',
+      'tire small': '3641.dat',
+      'tire medium': '6015.dat',
+      'tire large': '2904.dat',
+      'wheel axle': '4600.dat',
+      'axle': '4600.dat',
+      '1x2 axle': '4600.dat',
+      '1x4 axle': '4600.dat',
+      '1x6 axle': '4600.dat',
+      '1x8 axle': '4600.dat',
+    };
+
+    const COLOR_CODES = {
+      black: 0, blue: 1, green: 2, red: 4, brown: 6,
+      'light gray': 7, 'dark gray': 8, 'light blue': 9,
+      'bright green': 10, pink: 13, yellow: 14, white: 15,
+      tan: 19, purple: 22, orange: 25, magenta: 26, lime: 27, gray: 71,
+    };
+
+    function isWheelDescription(description) {
+      if (!description) return false;
+      return /wheel|tire|tyre/i.test(description);
+    }
+
+    function stripColor(lower) {
+      return lower
+        .replace(
+          /^(dark\s+\w+|light\s+\w+|bright\s+\w+|medium\s+\w+|reddish\s+\w+|red|blue|yellow|green|white|black|gray|grey|orange|purple|brown|tan|pink|lime)\s+/,
+          ''
+        )
+        .trim();
+    }
+
+    function resolvePartId(description) {
+      if (!description || description === 'none') return null;
+      const cleaned = description.replace(/\s*\(.*?\)/g, '').trim();
+      if (/\baxle\b/i.test(cleaned)) return PARTS_MAP['axle'];
+      const lower = cleaned.toLowerCase().trim();
+      if (PARTS_MAP[lower]) return PARTS_MAP[lower];
+      const colorless = stripColor(lower);
+      if (PARTS_MAP[colorless]) return PARTS_MAP[colorless];
+      const exactContains = Object.keys(PARTS_MAP).find((k) => colorless === k);
+      if (exactContains) return PARTS_MAP[exactContains];
+      const partialKey = Object.keys(PARTS_MAP).find(
+        (k) => colorless.includes(k) || k.includes(colorless)
+      );
+      if (partialKey) return PARTS_MAP[partialKey];
+      return null;
+    }
+
+    function resolveColorCode(description) {
+      if (!description) return 4;
+      const lower = description.toLowerCase();
+      for (const [name, code] of Object.entries(COLOR_CODES)) {
+        if (lower.startsWith(name + ' ') || lower === name) return code;
+      }
+      return 4;
+    }
+
+    function buildLdrString(pieces) {
+      const lines = ['0 LDrawViewer Model', '0 Name: model.ldr', '0 Author: LDrawViewer'];
+      const log = [];
+      for (const piece of pieces) {
+        const colorCode = resolveColorCode(piece.description);
+        const x = piece.x ?? 0;
+        const y = piece.y ?? 0;
+        const z = piece.z ?? 0;
+        const rotDeg = piece.rotation ?? 0;
+        const rotRad = (rotDeg * Math.PI) / 180;
+        const cosR = Math.round(Math.cos(rotRad) * 1000) / 1000;
+        const sinR = Math.round(Math.sin(rotRad) * 1000) / 1000;
+        const a = cosR, b = 0, c = sinR;
+        const d = 0,    e = 1, f = 0;
+        const g = -sinR, h = 0, i = cosR;
+        const mat = `${a} ${b} ${c} ${d} ${e} ${f} ${g} ${h} ${i}`;
+
+        if (isWheelDescription(piece.description)) {
+          lines.push(`1 ${colorCode} ${x} ${y} ${z} ${mat} ${PARTS_MAP['wheel small']}`);
+          lines.push(`1 ${colorCode} ${x} ${y} ${z} ${mat} ${PARTS_MAP['tire small']}`);
+          log.push({ desc: piece.description, id: PARTS_MAP['wheel small'], hit: true });
+          continue;
+        }
+        const partId = resolvePartId(piece.description);
+        log.push({ desc: piece.description, id: partId, hit: !!partId });
+        if (!partId) continue;
+        lines.push(`1 ${colorCode} ${x} ${y} ${z} ${mat} ${partId}`);
+      }
+      return { ldr: lines.join('\r\n'), log };
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // JSON extraction — accepts multiple shapes
+    // ─────────────────────────────────────────────────────────────────
+
+    function extractPieces(json) {
+      if (Array.isArray(json)) return json;
+      if (json.pieces && Array.isArray(json.pieces)) return json.pieces;
+      if (json.preview_model?.pieces) return json.preview_model.pieces;
+      if (Array.isArray(json.steps) && json.steps.length > 0) {
+        // Full instructions object — show the last step (complete model)
+        return json.steps[json.steps.length - 1]?.pieces ?? [];
+      }
+      return [];
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Three.js viewer — translated from LDrawViewer.jsx
+    // ─────────────────────────────────────────────────────────────────
+
+    const CAMERA_PRESET = new THREE.Vector3(0, 0.5, 1); // front
+
+    const wrap = document.getElementById('canvas-wrap');
+    const emptyMsg = document.getElementById('empty-msg');
+    const statusEl = document.getElementById('status');
+    const resolvedListEl = document.getElementById('resolved-list');
+
+    // Set up renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    wrap.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0c12);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(100, 200, 100);
+    scene.add(dirLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    fillLight.position.set(-100, -50, -100);
+    scene.add(fillLight);
+
+    const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 10000);
+    camera.position.set(0, 0, 500);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.enableZoom = true;
+
+    // Resize handling
+    const ro = new ResizeObserver(() => {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    });
+    ro.observe(wrap);
+
+    // Initial size
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
+
+    // Render loop
+    const FALLBACK_MAT = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+    let animId = null;
+    function animate() {
+      controls.update();
+      try {
+        renderer.render(scene, camera);
+      } catch (err) {
+        let patched = 0;
+        scene.traverse((obj) => {
+          if ((obj.isMesh || obj.isLine || obj.isPoints) && obj.material == null) {
+            obj.material = FALLBACK_MAT;
+            patched++;
+          }
+        });
+        if (patched === 0) { cancelAnimationFrame(animId); return; }
+      }
+      animId = requestAnimationFrame(animate);
+    }
+    animId = requestAnimationFrame(animate);
+
+    // Current loaded model
+    let currentModel = null;
+    let loadSeq = 0;
+
+    function clearModel() {
+      if (currentModel) {
+        scene.remove(currentModel);
+        currentModel = null;
+      }
+    }
+
+    function fitCamera(group) {
+      const bbox = new THREE.Box3().setFromObject(group);
+      const center = bbox.getCenter(new THREE.Vector3());
+      const size = bbox.getSize(new THREE.Vector3());
+      const radius = Math.max(size.x, size.y, size.z) * 0.5;
+      const dir = CAMERA_PRESET.clone().normalize();
+      camera.position.copy(center).addScaledVector(dir, radius * 3.5);
+      camera.lookAt(center);
+      controls.target.copy(center);
+      controls.update();
+    }
+
+    function renderFallbackCubes(pieces) {
+      const colorMap = {
+        red: 0xe84040, blue: 0x3a7bdd, yellow: 0xf5c518, green: 0x3dba4e,
+        white: 0xf0f0f0, black: 0x222222, gray: 0x888888, grey: 0x888888,
+        orange: 0xf58220, purple: 0x9b59b6, brown: 0x8b5a2b, tan: 0xd2b48c,
+        pink: 0xff69b4, lime: 0x80e040,
+      };
+      const group = new THREE.Group();
+      pieces.forEach((piece) => {
+        const desc = (piece.description || '').toLowerCase();
+        const sizeMatch = desc.match(/(\d+)x(\d+)/);
+        const studsW = sizeMatch ? parseInt(sizeMatch[1]) : 2;
+        const studsD = sizeMatch ? parseInt(sizeMatch[2]) : 4;
+        const isPlate = desc.includes('plate') || desc.includes('tile');
+        const brickH = isPlate ? 8 : 24;
+        const colorKey = Object.keys(colorMap).find((c) => desc.startsWith(c));
+        const color = colorKey ? colorMap[colorKey] : 0xcccccc;
+        const geo = new THREE.BoxGeometry(studsW * 20, brickH, studsD * 20);
+        const mat = new THREE.MeshPhongMaterial({ color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(piece.x ?? 0, -(piece.y ?? 0), piece.z ?? 0);
+        mesh.rotation.y = ((piece.rotation ?? 0) * Math.PI) / 180;
+        group.add(mesh);
+      });
+      scene.add(group);
+      currentModel = group;
+      fitCamera(group);
+    }
+
+    async function renderPieces(pieces) {
+      clearModel();
+      emptyMsg.style.display = 'none';
+
+      const { ldr, log } = buildLdrString(pieces);
+
+      // Update resolved list
+      resolvedListEl.innerHTML = log.map(({ desc, id, hit }) =>
+        `<div class="${hit ? 'hit' : 'miss'}">${hit ? '✓' : '✗'} ${desc}${id ? ` → ${id}` : ' (not found)'}</div>`
+      ).join('');
+      resolvedListEl.classList.add('visible');
+
+      const resolved = log.filter((l) => l.hit).length;
+      setStatus(`Loading… (${resolved}/${pieces.length} pieces resolved)`, '');
+
+      const seq = ++loadSeq;
+
+      const loader = new LDrawLoader();
+      loader.setConditionalLineMaterial(LDrawConditionalLineMaterial);
+      loader.smoothNormals = true;
+      loader.setPartsLibraryPath(getPartsLibraryPath());
+
+      try {
+        await loader.preloadMaterials(getPartsLibraryPath() + 'LDConfig.ldr');
+      } catch {
+        console.warn('[viewer] LDConfig.ldr not found — colours may be wrong');
+        loader.setMaterials([]);
+      }
+
+      if (seq !== loadSeq) return;
+
+      loader.parse(
+        ldr,
+        (group) => {
+          if (seq !== loadSeq) return;
+          group.rotation.x = Math.PI;
+          scene.add(group);
+          currentModel = group;
+          fitCamera(group);
+          setStatus(`${resolved}/${pieces.length} pieces rendered.`, 'ok');
+          document.getElementById('render-btn').disabled = false;
+        },
+        (err) => {
+          if (seq !== loadSeq) return;
+          console.warn('[viewer] LDrawLoader error, using fallback:', err);
+          renderFallbackCubes(pieces);
+          setStatus(`LDrawLoader failed — showing fallback boxes. (${resolved}/${pieces.length} resolved)`, 'error');
+          document.getElementById('render-btn').disabled = false;
+        }
+      );
+    }
+
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg;
+      statusEl.className = cls || '';
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // UI wiring
+    // ─────────────────────────────────────────────────────────────────
+
+    document.getElementById('render-btn').addEventListener('click', () => {
+      const raw = document.getElementById('json-input').value.trim();
+      if (!raw) { setStatus('Nothing to render — paste JSON first.', 'error'); return; }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (e) {
+        setStatus(`JSON parse error: ${e.message}`, 'error');
+        return;
+      }
+
+      const pieces = extractPieces(parsed);
+      if (!pieces || pieces.length === 0) {
+        setStatus('No pieces found in JSON. Expected a "pieces" array.', 'error');
+        return;
+      }
+
+      document.getElementById('render-btn').disabled = true;
+      setStatus('Loading…', '');
+      renderPieces(pieces);
+    });
+
+    // Ctrl+Enter / Cmd+Enter shortcut in textarea
+    document.getElementById('json-input').addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        document.getElementById('render-btn').click();
+      }
+    });
+  </script>
+</body>
+</html>
