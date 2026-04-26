@@ -68,12 +68,14 @@ PORT=3001
 
 Place your Google service account JSON at `backend/google-credentials.json`.
 
-### 3. LDraw parts library (optional but recommended)
+### 3. LDraw parts library
 
-The 3D viewer uses LDraw part files. Without them, a colored-box fallback is shown.
+The 3D viewer uses LDraw part files. Without them, a colored-box fallback is shown.  
+  
+The repo already includes some part files to be used immediately, but if more are needed do the following.
 
 1. Download the official LDraw parts library from https://www.ldraw.org/parts/latest-parts.html
-2. Extract into `frontend/public/ldraw/parts/`
+2. Extract into `frontend/public/ldraw/parts/` and `frontend/public/ldraw/p/`
 
 The path is configured in one place: `frontend/src/lib/partsMap.js` → `PARTS_LIBRARY_PATH`.
 
