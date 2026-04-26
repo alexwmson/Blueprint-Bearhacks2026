@@ -18,11 +18,11 @@ const T = {
 const EASE = [0.22, 1, 0.36, 1];
 
 /* ─── Pipeline toggle ───────────────────────────────────────────
-   'scan'     → single Gemini call on the full image (fast, less precise)
+   'scan'     → single Gemini call on the full image, only if necessary
    'classify' → Cloud Vision object localization + per-crop Gemini calls
-                (slower but identifies each piece individually)
+                (slower but identifies each piece individually, this ones just better)
 ─────────────────────────────────────────────────────────────── */
-const PIPELINE = 'scan'; // ← flip to 'scan' to use just gemini, classify has cloud vision and gemini
+const PIPELINE = 'classify'; // ← flip to 'scan' to use just gemini, classify has cloud vision and gemini
 
 /* ─── Stage labels ─── */
 const STAGES = { IDLE: 'idle', UPLOADING: 'uploading', SCANNING: 'scanning', CLASSIFYING: 'classifying', GENERATING: 'generating', ERROR: 'error' };
