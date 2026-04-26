@@ -36,6 +36,10 @@ export async function scanImage(imageBase64, labels) {
  * Classify a single cropped image using Gemini Vision.
  * Returns { description: "red 2x4 brick" } or { description: "none" }
  */
+/**
+ * Classify a single cropped image using Gemini Vision.
+ * Returns { pieces: string[] } — may be multiple pieces if the crop contained more than one.
+ */
 export async function classifyPiece(croppedImageBase64) {
   const res = await fetch(`${BASE_URL}/classify`, {
     method: 'POST',
@@ -51,7 +55,7 @@ export async function classifyPiece(croppedImageBase64) {
 
 /**
  * Classify all crops in parallel using Promise.all.
- * Filters out descriptions of "none".
+ * Each crop may return multiple pieces; all piece lists are flattened together.
  * Returns { descriptions: string[], errorCount: number }
  */
 export async function classifyAllCrops(crops, onProgress) {
@@ -63,18 +67,18 @@ export async function classifyAllCrops(crops, onProgress) {
         const result = await classifyPiece(crop.croppedImageBase64);
         completed++;
         if (onProgress) onProgress(completed, crops.length);
-        return result.description;
+        return Array.isArray(result.pieces) ? result.pieces : [];
       } catch (err) {
         console.error('Classify error for crop:', err.message);
         errorCount++;
         completed++;
         if (onProgress) onProgress(completed, crops.length);
-        return 'none';
+        return [];
       }
-    })
+    }),
   );
   return {
-    descriptions: rawResults.filter((d) => d && d !== 'none'),
+    descriptions: rawResults.flat().filter(Boolean),
     errorCount,
   };
 }
