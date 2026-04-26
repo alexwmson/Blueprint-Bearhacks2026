@@ -1109,7 +1109,7 @@ html, body, #root {
 /* Ideas grid — 2 columns */
 .ideas-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 20px;
 }
 
@@ -1465,7 +1465,7 @@ html, body, #root {
 /* Active step card */
 .main-root .step-card {
   background: var(--bp-card);
-  border: 2px solid var(--bp-ink);
+  border: 1px solid var(--bp-line);
   border-radius: 12px;
   overflow: visible;
   box-shadow: none;
@@ -1597,7 +1597,11 @@ html, body, #root {
 .step-scene-preview {
   flex: 1;
   height: 280px; /* matches LDrawViewer height="280px" prop */
-  background: var(--bp-paper);
+  background:
+    linear-gradient(#EEEBDE 0.5px, transparent 0.5px),
+    linear-gradient(90deg, #EEEBDE 0.5px, transparent 0.5px);
+  background-size: 40px 40px;
+  background-color: var(--bp-paper);
   border-radius: 8px;
   position: relative;
   overflow: hidden;
