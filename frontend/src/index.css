@@ -1394,6 +1394,7 @@ html, body, #root {
   border: none;
   border-radius: 8px;
   padding: 10px 12px;
+  min-width: 0;
 }
 .main-root .piece-dot { display: none; }
 
@@ -1410,9 +1411,8 @@ html, body, #root {
   color: var(--bp-ink);
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .piece-inv-count {
   font-family: var(--bp-font-sans);
@@ -1769,4 +1769,5 @@ html, body, #root {
   }
   .main-root .step-render-wrap { flex-direction: column; }
   .main-root .piece-tray { width: 100%; max-width: 100%; min-width: 0; }
+  .main-root .expanded-section .piece-inventory { grid-template-columns: 1fr; }
 }

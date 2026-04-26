@@ -146,7 +146,7 @@ function Spinner() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   HEADLINE — animated word-by-word
+   HEADLINE animated word-by-word
 ══════════════════════════════════════════════════════════════ */
 const HEADLINE_WORDS = [
   { text: 'Turn',     color: null },
@@ -328,7 +328,7 @@ export default function LandingPage() {
       badge: '01',
       mockup: <MockupScan />,
       title: 'Scan your bricks',
-      body: 'Snap a photo of your loose bricks. Our vision models detect every piece — color, size, shape.',
+      body: 'Snap a photo of your loose bricks. Our vision models detect every piece and its color, size, and shape.',
     },
     {
       badge: '02',
@@ -424,7 +424,7 @@ export default function LandingPage() {
 
                 {/* Subhead */}
                 <motion.p {...fadeUp(0.5)} style={{ fontSize: 17, color: T.muted, maxWidth: 520, marginTop: 24, lineHeight: 1.55, textAlign: 'center' }}>
-                  Scan your LEGO collection and get custom build sets with step-by-step instructions — no set required.
+                  Scan your LEGO collection and get custom build sets with step-by-step instructions, no sets required.
                 </motion.p>
 
                 {/* CTA Buttons */}
@@ -611,7 +611,7 @@ export default function LandingPage() {
               whileTap={{ scale: reduced ? 1 : 0.97 }}
               transition={btnSpring}
               onClick={scrollToTop}
-              aria-label="Get started — scroll to top"
+              aria-label="Get started scroll to top"
               style={{
                 padding: 3,
                 borderRadius: 999,
