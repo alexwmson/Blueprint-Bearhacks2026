@@ -643,7 +643,7 @@ export default function LandingPage() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <img src="/images/image.png" alt="Blueprint logo" style={{ width: 16, height: 12, objectFit: 'contain' }} />
-              Blueprint · 2025
+              Blueprint · 2026
             </div>
             <span>Made for Bearhacks</span>
           </div>
